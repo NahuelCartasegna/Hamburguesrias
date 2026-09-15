@@ -78,6 +78,7 @@ body {
   min-width: 320px;
   background: var(--bg);
   color: var(--text);
+
   transition:
     background 0.2s ease,
     color 0.2s ease;
@@ -99,68 +100,109 @@ a {
 
 .app {
   min-height: 100vh;
+
   background: var(--bg);
   color: var(--text);
+
   transition:
     background 0.2s ease,
     color 0.2s ease;
 }
 
-/* HEADER */
+/* =========================
+   HEADER
+========================= */
 
 header {
   position: sticky;
   top: 0;
   z-index: 20;
 
+  min-height: 76px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
 
-  gap: 20px;
+  gap: 24px;
 
-  padding: 18px 32px;
+  padding: 14px 32px;
 
   background: color-mix(
     in srgb,
-    var(--surface) 92%,
+    var(--surface) 94%,
     transparent
   );
 
   border-bottom: 1px solid var(--border);
 
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(16px);
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 12px;
+
+  flex-shrink: 0;
 }
 
-.brand > span {
-  font-size: 32px;
+.brandIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  font-size: 28px;
+
+  border-radius: 12px;
+
+  background: var(--surface-hover);
 }
 
 .brand h1 {
   margin: 0;
+
   font-size: 20px;
   line-height: 1.1;
 }
 
 .brand p {
   margin: 4px 0 0;
+
   color: var(--text-soft);
+
   font-size: 13px;
 }
 
 .headerActions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-end;
+
+  gap: 9px;
+
+  min-height: 42px;
 }
 
-/* THEME */
+/*
+  Wrapper para que el cuadro de login
+  quede alineado verticalmente con
+  el resto de los botones.
+*/
+.authWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 40px;
+}
+
+/* =========================
+   THEME
+========================= */
 
 .themeToggle {
   width: 40px;
@@ -171,6 +213,8 @@ header {
   justify-content: center;
 
   padding: 0;
+
+  flex-shrink: 0;
 
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -187,14 +231,16 @@ header {
 .themeToggle:hover {
   background: var(--surface-hover);
   border-color: var(--border-strong);
+
   transform: translateY(-1px);
 }
 
-/* BUTTONS */
+/* =========================
+   BUTTONS
+========================= */
 
 .primary,
 .ghost,
-.danger,
 .back {
   display: inline-flex;
   align-items: center;
@@ -225,6 +271,16 @@ header {
   opacity: 0.92;
 }
 
+.primary:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
+}
+
+.newButton {
+  white-space: nowrap;
+}
+
 .ghost {
   border: 1px solid var(--border);
   background: var(--surface);
@@ -233,16 +289,6 @@ header {
 
 .ghost:hover {
   background: var(--surface-hover);
-}
-
-.danger {
-  border: 1px solid var(--danger);
-  background: var(--danger);
-  color: white;
-}
-
-.danger:hover {
-  opacity: 0.9;
 }
 
 .back {
@@ -257,11 +303,9 @@ header {
   color: var(--text);
 }
 
-.wide {
-  width: 100%;
-}
-
-/* ERROR */
+/* =========================
+   ERROR
+========================= */
 
 .error {
   margin: 16px auto;
@@ -278,7 +322,9 @@ header {
   font-size: 14px;
 }
 
-/* HERO */
+/* =========================
+   HERO
+========================= */
 
 .hero {
   max-width: 1200px;
@@ -327,7 +373,9 @@ header {
   font-size: 72px;
 }
 
-/* TOOLBAR */
+/* =========================
+   TOOLBAR
+========================= */
 
 .toolbar {
   max-width: 1200px;
@@ -357,6 +405,22 @@ header {
 
   background: var(--surface);
   color: var(--text-soft);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.search:focus-within {
+  border-color: var(--border-strong);
+
+  box-shadow:
+    0 0 0 3px
+    color-mix(
+      in srgb,
+      var(--border-strong) 25%,
+      transparent
+    );
 }
 
 .search input {
@@ -373,12 +437,68 @@ header {
   color: var(--text-muted);
 }
 
-.count {
-  color: var(--text-soft);
-  font-size: 14px;
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-/* GRID */
+.count {
+  color: var(--text-soft);
+
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* =========================
+   VIEW TOGGLE
+========================= */
+
+.viewToggle {
+  display: flex;
+  align-items: center;
+
+  padding: 3px;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  background: var(--surface);
+}
+
+.viewToggle button {
+  width: 34px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: transparent;
+  color: var(--text-muted);
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.viewToggle button:hover {
+  color: var(--text);
+}
+
+.viewToggle button.active {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+/* =========================
+   GRID
+========================= */
 
 .grid {
   max-width: 1200px;
@@ -387,6 +507,7 @@ header {
   padding-bottom: 50px;
 
   display: grid;
+
   grid-template-columns:
     repeat(
       auto-fill,
@@ -395,6 +516,10 @@ header {
 
   gap: 16px;
 }
+
+/* =========================
+   CARD
+========================= */
 
 .card {
   position: relative;
@@ -428,6 +553,7 @@ header {
 
 .card:hover {
   transform: translateY(-3px);
+
   border-color: var(--border-strong);
 }
 
@@ -450,6 +576,7 @@ header {
 
 .rank {
   position: absolute;
+
   top: 9px;
   left: 9px;
 
@@ -466,6 +593,7 @@ header {
 
 .cardMain {
   min-width: 0;
+
   padding: 16px;
 }
 
@@ -483,12 +611,14 @@ header {
   margin-bottom: 10px;
 
   color: var(--text-soft);
+
   font-size: 12px;
 }
 
 .chips {
   display: flex;
   flex-wrap: wrap;
+
   gap: 5px;
 }
 
@@ -523,12 +653,62 @@ header {
   font-size: 11px;
 }
 
-/* EMPTY */
+/* =========================
+   LIST VIEW
+========================= */
+
+.listView {
+  grid-template-columns: 1fr;
+}
+
+.cardList {
+  grid-template-columns:
+    150px 1fr auto;
+
+  min-height: 150px;
+}
+
+.cardList .cardImage {
+  width: 150px;
+  height: 150px;
+}
+
+.cardList .cardMain {
+  padding: 22px 24px;
+}
+
+.cardList .cardMain h3 {
+  font-size: 20px;
+}
+
+.cardList .meta {
+  font-size: 13px;
+}
+
+.cardList .chips {
+  gap: 7px;
+}
+
+.cardList .chips span {
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.cardList .bigScore {
+  padding-right: 28px;
+  min-width: 100px;
+  font-size: 30px;
+}
+
+/* =========================
+   EMPTY
+========================= */
 
 .empty {
   max-width: 1200px;
 
   margin: 40px auto;
+
   padding: 50px 20px;
 
   text-align: center;
@@ -549,12 +729,15 @@ header {
   color: var(--text-soft);
 }
 
-/* DETAIL */
+/* =========================
+   DETAIL
+========================= */
 
 .detail {
   max-width: 1200px;
 
   margin: 28px auto;
+
   padding-bottom: 60px;
 }
 
@@ -568,9 +751,12 @@ header {
   margin-top: 18px;
 }
 
-.detailTop > div:first-child {
+.detailInfo {
   display: grid;
-  grid-template-columns: 230px 1fr;
+
+  grid-template-columns:
+    230px 1fr;
+
   gap: 24px;
 
   flex: 1;
@@ -595,6 +781,7 @@ header {
   margin: 0;
 
   color: var(--text-soft);
+
   line-height: 1.6;
 }
 
@@ -616,6 +803,7 @@ header {
 .links a {
   display: inline-flex;
   align-items: center;
+
   gap: 5px;
 
   color: var(--text);
@@ -630,6 +818,7 @@ header {
 .links span {
   display: inline-flex;
   align-items: center;
+
   gap: 5px;
 }
 
@@ -656,10 +845,13 @@ header {
 
 .scoreCircle span {
   color: var(--text-muted);
+
   font-size: 12px;
 }
 
-/* METRICS */
+/* =========================
+   METRICS
+========================= */
 
 .metricGrid {
   display: grid;
@@ -704,21 +896,83 @@ header {
   font-size: 20px;
 }
 
-/* DETAIL ACTIONS */
+/* =========================
+   DETAIL ACTIONS
+========================= */
 
 .detailActions {
   display: flex;
   flex-wrap: wrap;
 
-  gap: 10px;
+  gap: 9px;
 
   margin-bottom: 24px;
 }
 
-/* PANELS */
+.editAction,
+.deleteAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 9px 13px;
+
+  border-radius: 9px;
+
+  font-size: 13px;
+  font-weight: 650;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.15s ease;
+}
+
+.editAction {
+  border: 1px solid var(--border);
+
+  background: var(--surface);
+  color: var(--text);
+}
+
+.editAction:hover {
+  background: var(--surface-hover);
+
+  border-color: var(--border-strong);
+
+  transform: translateY(-1px);
+}
+
+.deleteAction {
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--danger) 30%,
+      var(--border)
+    );
+
+  background: transparent;
+
+  color: var(--danger);
+}
+
+.deleteAction:hover {
+  background: var(--danger-bg);
+
+  border-color: var(--danger);
+
+  transform: translateY(-1px);
+}
+
+/* =========================
+   PANELS
+========================= */
 
 .panel {
   margin-top: 16px;
+
   padding: 22px;
 
   border: 1px solid var(--border);
@@ -730,6 +984,7 @@ header {
 .panel h3 {
   display: flex;
   align-items: center;
+
   gap: 8px;
 
   margin: 0 0 18px;
@@ -749,10 +1004,12 @@ header {
   color: var(--text-muted);
 }
 
-/* REVIEWS */
+/* =========================
+   REVIEWS
+========================= */
 
 .review {
-  padding: 15px 0;
+  padding: 17px 0;
 
   border-top: 1px solid var(--border);
 }
@@ -761,37 +1018,127 @@ header {
   border-top: 0;
 }
 
-.review > div {
+.reviewHeader {
   display: flex;
+
   align-items: center;
   justify-content: space-between;
 
-  gap: 20px;
+  gap: 16px;
 }
 
-.review b {
+.reviewAuthor {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+
+.reviewAuthor b {
   font-size: 14px;
 }
 
-.review span {
+.reviewAuthor span {
+  padding: 4px 7px;
+
+  border-radius: 6px;
+
+  background: var(--surface-hover);
+
   color: var(--text-soft);
 
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reviewActions {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+.reviewButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  padding: 6px 9px;
+
+  border: 1px solid var(--border);
+  border-radius: 7px;
+
+  background: var(--surface);
+
+  font-size: 11px;
+  font-weight: 650;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.15s ease;
+}
+
+.reviewButton:hover {
+  transform: translateY(-1px);
+}
+
+.editReviewButton {
+  color: var(--text-soft);
+}
+
+.editReviewButton:hover {
+  background: var(--surface-hover);
+
+  border-color: var(--border-strong);
+
+  color: var(--text);
+}
+
+.deleteReviewButton {
+  color: var(--danger);
+
+  border-color:
+    color-mix(
+      in srgb,
+      var(--danger) 25%,
+      var(--border)
+    );
+}
+
+.deleteReviewButton:hover {
+  background: var(--danger-bg);
+
+  border-color: var(--danger);
 }
 
 .review p {
-  margin: 8px 0 0;
+  margin: 9px 0 0;
 
   color: var(--text-soft);
 
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
-/* MODAL */
+.reviewDate {
+  display: block;
+
+  margin-top: 9px;
+
+  color: var(--text-muted);
+
+  font-size: 11px;
+}
+
+/* =========================
+   MODAL
+========================= */
 
 .modalBg {
   position: fixed;
+
   inset: 0;
 
   z-index: 100;
@@ -809,7 +1156,9 @@ header {
 
 .modal {
   width: min(620px, 100%);
-  max-height: calc(100vh - 40px);
+
+  max-height:
+    calc(100vh - 40px);
 
   overflow-y: auto;
 
@@ -822,7 +1171,8 @@ header {
   color: var(--text);
 
   box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.35);
+    0 30px 80px
+    rgba(0, 0, 0, 0.35);
 }
 
 .modalHead {
@@ -839,7 +1189,31 @@ header {
   margin: 0;
 }
 
-/* SCORE FORM */
+.modalClose {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid var(--border);
+  border-radius: 9px;
+
+  background: var(--surface);
+  color: var(--text-soft);
+}
+
+.modalClose:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+/* =========================
+   SCORE FORM
+========================= */
 
 .scoreGrid {
   display: grid;
@@ -881,8 +1255,7 @@ header {
 }
 
 .scoreGrid input:focus,
-.modal textarea:focus,
-.search:focus-within {
+.modal textarea:focus {
   border-color: var(--border-strong);
 }
 
@@ -891,14 +1264,27 @@ header {
 
   resize: vertical;
 
-  margin-bottom: 16px;
+  margin-bottom: 4px;
 }
 
-/* MOBILE */
+.fieldHint {
+  color: var(--text-muted);
+
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.wide {
+  width: 100%;
+}
+
+/* =========================
+   MOBILE
+========================= */
 
 @media (max-width: 900px) {
   header {
-    padding: 15px 18px;
+    padding: 14px 18px;
   }
 
   .hero,
@@ -914,8 +1300,9 @@ header {
       repeat(3, 1fr);
   }
 
-  .detailTop > div:first-child {
-    grid-template-columns: 180px 1fr;
+  .detailInfo {
+    grid-template-columns:
+      180px 1fr;
   }
 
   .detailImage {
@@ -925,12 +1312,17 @@ header {
 
 @media (max-width: 650px) {
   header {
-    align-items: flex-start;
+    align-items: center;
   }
 
   .headerActions {
     flex-wrap: wrap;
+
     justify-content: flex-end;
+  }
+
+  .authWrapper {
+    align-self: center;
   }
 
   .brand p {
@@ -954,19 +1346,49 @@ header {
     max-width: none;
   }
 
+  .toolbarRight {
+    justify-content: space-between;
+  }
+
   .count {
-    text-align: right;
+    text-align: left;
   }
 
   .grid {
     grid-template-columns: 1fr;
   }
 
+  .cardList {
+    grid-template-columns:
+      110px 1fr auto;
+  }
+
+  .cardList .cardImage {
+    width: 110px;
+    height: 130px;
+  }
+
+  .cardList .cardMain {
+    padding: 15px;
+  }
+
+  .cardList .cardMain h3 {
+    font-size: 17px;
+  }
+
+  .cardList .bigScore {
+    min-width: 70px;
+
+    padding-right: 14px;
+
+    font-size: 23px;
+  }
+
   .detailTop {
     flex-direction: column;
   }
 
-  .detailTop > div:first-child {
+  .detailInfo {
     grid-template-columns: 1fr;
   }
 
@@ -984,30 +1406,44 @@ header {
       repeat(2, 1fr);
   }
 
-  .scoreGrid {
-    grid-template-columns: 1fr;
+  .reviewHeader {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .reviewActions {
+    width: 100%;
   }
 }
 
 @media (max-width: 430px) {
+  header {
+    gap: 10px;
+  }
+
   .brand h1 {
     font-size: 17px;
   }
 
-  .brand > span {
-    font-size: 27px;
+  .brandIcon {
+    width: 36px;
+    height: 36px;
+
+    font-size: 23px;
   }
 
   .headerActions {
     gap: 6px;
   }
 
-  .headerActions .primary {
+  .newButton {
     padding: 9px 10px;
   }
 
   .card {
-    grid-template-columns: 85px 1fr auto;
+    grid-template-columns:
+      85px 1fr auto;
   }
 
   .cardImage {
@@ -1017,10 +1453,29 @@ header {
 
   .bigScore {
     min-width: 55px;
+
     font-size: 20px;
   }
 
   .metricGrid {
     grid-template-columns: 1fr;
+  }
+
+  .cardList {
+    grid-template-columns:
+      85px 1fr auto;
+  }
+
+  .cardList .cardImage {
+    width: 85px;
+    height: 120px;
+  }
+
+  .cardList .bigScore {
+    min-width: 55px;
+
+    padding-right: 10px;
+
+    font-size: 20px;
   }
 }

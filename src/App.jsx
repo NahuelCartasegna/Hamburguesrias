@@ -2,15 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
   ExternalLink,
+  LayoutGrid,
+  List,
   MapPin,
   MessageSquare,
   Moon,
+  Pencil,
   Plus,
   Search,
-  Save,
   Star,
   Sun,
-  Trash2
+  Trash2,
+  X
 } from 'lucide-react'
 
 import { supabase } from './lib/supabase'
@@ -38,6 +41,10 @@ export default function App() {
     return localStorage.getItem('hamburguesitas-theme') === 'dark'
   })
 
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem('hamburguesitas-view') || 'grid'
+  })
+
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode)
 
@@ -46,6 +53,10 @@ export default function App() {
       darkMode ? 'dark' : 'light'
     )
   }, [darkMode])
+
+  useEffect(() => {
+    localStorage.setItem('hamburguesitas-view', viewMode)
+  }, [viewMode])
 
   async function loadAuth() {
     if (!supabase) return
@@ -200,7 +211,7 @@ export default function App() {
     }
 
     if (
-      !confirm(`Eliminar ${current.name}?`)
+      !confirm(`¿Eliminar ${current.name}?`)
     ) {
       return
     }
@@ -233,7 +244,7 @@ export default function App() {
     <div className="app">
       <header>
         <div className="brand">
-          <span>🍔</span>
+          <span className="brandIcon">🍔</span>
 
           <div>
             <h1>Hamburguesitas</h1>
@@ -252,11 +263,6 @@ export default function App() {
                 ? 'Cambiar a modo claro'
                 : 'Cambiar a modo oscuro'
             }
-            aria-label={
-              darkMode
-                ? 'Cambiar a modo claro'
-                : 'Cambiar a modo oscuro'
-            }
           >
             {darkMode ? (
               <Sun size={18} />
@@ -265,15 +271,17 @@ export default function App() {
             )}
           </button>
 
-          <AuthPanel
-            session={session}
-            profile={profile}
-            onAuthChange={loadAuth}
-          />
+          <div className="authWrapper">
+            <AuthPanel
+              session={session}
+              profile={profile}
+              onAuthChange={loadAuth}
+            />
+          </div>
 
           {canEdit && (
             <button
-              className="primary"
+              className="primary newButton"
               onClick={() => {
                 setEditing(null)
                 setShowForm(true)
@@ -341,8 +349,42 @@ export default function App() {
               />
             </div>
 
-            <div className="count">
-              {rows.length} lugares
+            <div className="toolbarRight">
+              <div className="count">
+                {rows.length} lugares
+              </div>
+
+              <div className="viewToggle">
+                <button
+                  className={
+                    viewMode === 'grid'
+                      ? 'active'
+                      : ''
+                  }
+                  onClick={() =>
+                    setViewMode('grid')
+                  }
+                  title="Vista en cuadrícula"
+                  aria-label="Vista en cuadrícula"
+                >
+                  <LayoutGrid size={17} />
+                </button>
+
+                <button
+                  className={
+                    viewMode === 'list'
+                      ? 'active'
+                      : ''
+                  }
+                  onClick={() =>
+                    setViewMode('list')
+                  }
+                  title="Vista en lista"
+                  aria-label="Vista en lista"
+                >
+                  <List size={18} />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -363,12 +405,19 @@ export default function App() {
               </p>
             </div>
           ) : (
-            <div className="grid">
+            <div
+              className={
+                viewMode === 'list'
+                  ? 'grid listView'
+                  : 'grid'
+              }
+            >
               {rows.map((r, i) => (
                 <Card
                   key={r.id}
                   r={r}
                   rank={i + 1}
+                  viewMode={viewMode}
                   onClick={() =>
                     setSelected(r.id)
                   }
@@ -394,10 +443,19 @@ export default function App() {
   )
 }
 
-function Card({ r, rank, onClick }) {
+function Card({
+  r,
+  rank,
+  viewMode,
+  onClick
+}) {
   return (
     <button
-      className="card"
+      className={`card ${
+        viewMode === 'list'
+          ? 'cardList'
+          : ''
+      }`}
       onClick={onClick}
     >
       {r.image_url ? (
@@ -617,7 +675,8 @@ function Detail({
       profile.role === 'admin'
 
     const isOwner =
-      rating.user_id === session?.user?.id
+      rating.user_id ===
+      session?.user?.id
 
     if (!isAdmin && !isOwner) {
       return
@@ -661,7 +720,7 @@ function Detail({
       </button>
 
       <div className="detailTop">
-        <div>
+        <div className="detailInfo">
           {r.image_url ? (
             <img
               className="detailImage"
@@ -681,7 +740,9 @@ function Detail({
 
             <h2>{r.name}</h2>
 
-            <p>{r.description}</p>
+            {r.description && (
+              <p>{r.description}</p>
+            )}
 
             <div className="links">
               {r.website_url && (
@@ -776,22 +837,22 @@ function Detail({
 
         {canEdit && (
           <button
-            className="ghost"
+            className="editAction"
             onClick={onEdit}
           >
-            <Save size={17} />
-            Editar
+            <Pencil size={16} />
+            Editar hamburguesería
           </button>
         )}
 
         {profile?.role ===
           'admin' && (
           <button
-            className="danger"
+            className="deleteAction"
             onClick={onDelete}
           >
-            <Trash2 size={17} />
-            Eliminar
+            <Trash2 size={16} />
+            Eliminar hamburguesería
           </button>
         )}
       </div>
@@ -845,7 +906,7 @@ function Detail({
                 key={x.id}
               >
                 <div className="reviewHeader">
-                  <div>
+                  <div className="reviewAuthor">
                     <b>
                       {profiles[
                         x.user_id
@@ -865,29 +926,30 @@ function Detail({
                   <div className="reviewActions">
                     {isOwner && (
                       <button
-                        className="reviewButton"
+                        className="reviewButton editReviewButton"
                         onClick={() =>
                           openEditRating(
                             x
                           )
                         }
+                        title="Editar evaluación"
                       >
-                        <Save
+                        <Pencil
                           size={14}
                         />
                         Editar
                       </button>
                     )}
 
-                    {(isOwner ||
-                      isAdmin) && (
+                    {isAdmin && (
                       <button
-                        className="reviewButton dangerButton"
+                        className="reviewButton deleteReviewButton"
                         onClick={() =>
                           deleteRating(
                             x
                           )
                         }
+                        title="Eliminar evaluación"
                       >
                         <Trash2
                           size={14}
@@ -938,14 +1000,15 @@ function Detail({
 
               <button
                 type="button"
-                className="ghost"
+                className="modalClose"
                 onClick={() =>
                   setShowRating(
                     false
                   )
                 }
+                title="Cerrar"
               >
-                ×
+                <X size={18} />
               </button>
             </div>
 
@@ -985,7 +1048,6 @@ function Detail({
 
               <textarea
                 required
-                minLength="1"
                 value={form.notes}
                 onChange={e =>
                   setForm({
