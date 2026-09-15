@@ -1,6 +1,10 @@
-import { createClient } from '@supabase/supabase-js'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './styles.css'
 
-const url = import.meta.env.VITE_SUPABASE_URL
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY
+console.log('main.jsx ejecutándose')          // <-- agregar
+const rootEl = document.getElementById('root')
+console.log('rootEl encontrado:', rootEl)     // <-- agregar
 
-export const supabase = url && key ? createClient(url, key) : null
+ReactDOM.createRoot(rootEl).render(<React.StrictMode><App /></React.StrictMode>)
