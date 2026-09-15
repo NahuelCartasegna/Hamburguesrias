@@ -51,3 +51,11 @@ No se cargan datos iniciales.
 - Build: `npm run build`
 - Output: `dist`
 - Variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+
+### Perfil y privacidad de evaluaciones
+
+- Ejecutá `supabase/migrations/005_profiles.sql` después de las migraciones anteriores.
+- Los usuarios tienen un `username` obligatorio y único.
+- Desde **Mi perfil** pueden cambiar su username y elegir identidad pública o privada.
+- Si el perfil es privado, las evaluaciones muestran `Usuario` y el username privado no se expone en `public_profiles`.
+- Las evaluaciones ahora muestran el puntaje general en grande y permiten desplegar el detalle con los puntajes por categoría, comentario y fecha.

@@ -19,11 +19,15 @@ import {
   X,
   Clock3,
   Ban,
+  User,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { supabase, supabaseConfigError } from './lib/supabase'
 import { CATS, avg, ratingScore, restaurantScore } from './lib/scoring'
 import AuthPanel from './components/AuthPanel'
 import RestaurantForm from './components/RestaurantForm'
+import ProfilePanel from './components/ProfilePanel'
 
 const emptyRating = {
   burger: '',
@@ -61,6 +65,7 @@ export default function App() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
   const [showRequests, setShowRequests] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState(null)
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('hamburguesitas-view-mode') || 'grid')
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('hamburguesitas-theme') === 'dark')
@@ -325,6 +330,17 @@ export default function App() {
             </button>
           )}
 
+          {session && (
+            <button
+              className="profileButton"
+              onClick={() => setShowProfile(true)}
+              title="Mi perfil"
+            >
+              <User size={17} />
+              <span>{profile?.username || 'Perfil'}</span>
+            </button>
+          )}
+
           <div className="authWrapper">
             <AuthPanel session={session} profile={profile} onAuthChange={loadAuth} />
           </div>
@@ -460,6 +476,17 @@ export default function App() {
           }}
         />
       )}
+
+      {showProfile && session && profile && (
+        <ProfilePanel
+          profile={profile}
+          onSaved={async () => {
+            await loadAuth()
+            await load()
+          }}
+          onClose={() => setShowProfile(false)}
+        />
+      )}
     </div>
   )
 }
@@ -504,6 +531,7 @@ function Card({ r, rank, onClick, viewMode }) {
 }
 
 function Detail({ r, session, profile, profiles, canEdit, onBack, onEdit, onDelete, onReload }) {
+  const [expandedReviews, setExpandedReviews] = useState({})
   const [showRating, setShowRating] = useState(false)
   const [editingRating, setEditingRating] = useState(null)
   const [form, setForm] = useState(emptyRating)
@@ -701,18 +729,28 @@ function Detail({ r, session, profile, profiles, canEdit, onBack, onEdit, onDele
           r.ratings.map(x => {
             const owner = x.user_id === session?.user?.id
             const admin = profile?.role === 'admin'
-            const reviewer = profiles[x.user_id]?.display_name || 'Usuario'
+            const reviewer = profiles[x.user_id]?.reviewer_name || 'Usuario'
             const wasUpdated = x.updated_at && x.created_at && x.updated_at !== x.created_at
+            const expanded = !!expandedReviews[x.id]
+            const score = ratingScore(x)
 
             return (
-              <div className="review" key={x.id}>
+              <div className={`review ${expanded ? 'reviewExpanded' : ''}`} key={x.id}>
                 <div className="reviewHeader">
                   <div className="reviewAuthor">
                     <b>{reviewer}</b>
-                    <span>{ratingScore(x)?.toFixed(2) ?? 'Sin puntaje'}/10</span>
+                    <strong className="reviewScore">{score?.toFixed(2) ?? '—'}<small>/10</small></strong>
                   </div>
 
                   <div className="reviewActions">
+                    <button
+                      className="reviewButton detailReviewButton"
+                      onClick={() => setExpandedReviews(prev => ({ ...prev, [x.id]: !prev[x.id] }))}
+                      title={expanded ? 'Ocultar detalle' : 'Ver detalle'}
+                    >
+                      {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      {expanded ? 'Ocultar detalle' : 'Ver detalle'}
+                    </button>
                     {owner && (
                       <button
                         className="reviewButton editReviewButton"
@@ -735,11 +773,25 @@ function Detail({ r, session, profile, profiles, canEdit, onBack, onEdit, onDele
                   </div>
                 </div>
 
-                {x.notes && <p>{x.notes}</p>}
-
-                <span className="reviewDate">
-                  {wasUpdated ? 'Actualizada' : 'Creada'}: {formatDate(wasUpdated ? x.updated_at : x.created_at)}
-                </span>
+                {expanded && (
+                  <div className="reviewDetail">
+                    <div className="reviewMetricGrid">
+                      {CATS.map(([key, icon, label]) => (
+                        <div className="reviewMetric" key={key}>
+                          <span>{icon}</span>
+                          <div><small>{label}</small><b>{x[key] == null ? '—' : Number(x[key]).toFixed(1)}</b></div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="reviewComment">
+                      <small>Comentario</small>
+                      <p>{x.notes}</p>
+                    </div>
+                    <span className="reviewDate">
+                      {wasUpdated ? 'Actualizada' : 'Creada'}: {formatDate(wasUpdated ? x.updated_at : x.created_at)}
+                    </span>
+                  </div>
+                )}
               </div>
             )
           })
@@ -855,7 +907,7 @@ function RequestsPanel({ requests, isAdmin, selectedRequest, setSelectedRequest,
 
                       <span>
                         {request.request_type === 'create' ? 'Nueva hamburguesería' : 'Solicitud de cambios'}
-                        {isAdmin && request.requester?.display_name ? ` · ${request.requester.display_name}` : ''}
+                        {isAdmin && request.requester?.reviewer_name ? ` · ${request.requester.reviewer_name}` : ''}
                       </span>
                       <small>{formatDate(request.created_at)}</small>
                     </div>
