@@ -66,7 +66,6 @@ export default function App() {
   const [editing, setEditing] = useState(null)
   const [showRequests, setShowRequests] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
-  const [expandedReviews, setExpandedReviews] = useState({})
   const [selectedRequest, setSelectedRequest] = useState(null)
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('hamburguesitas-view-mode') || 'grid')
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('hamburguesitas-theme') === 'dark')
@@ -532,6 +531,7 @@ function Card({ r, rank, onClick, viewMode }) {
 }
 
 function Detail({ r, session, profile, profiles, canEdit, onBack, onEdit, onDelete, onReload }) {
+  const [expandedReviews, setExpandedReviews] = useState({})
   const [showRating, setShowRating] = useState(false)
   const [editingRating, setEditingRating] = useState(null)
   const [form, setForm] = useState(emptyRating)
