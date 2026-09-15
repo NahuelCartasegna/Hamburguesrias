@@ -366,3 +366,73 @@ header {
 @media (max-height: 600px) {
   .modalBg { align-items: flex-start; padding-top: 16px; padding-bottom: 16px; }
 }
+
+
+/* Perfil de usuario */
+.profileButton {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 40px; padding: 9px 12px; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--surface); color: var(--text);
+  font-weight: 650; white-space: nowrap;
+}
+.profileButton:hover { background: var(--surface-hover); border-color: var(--border-strong); }
+.profileModal { width: min(500px, 100%); }
+.profileIdentity {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+  padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-soft);
+}
+.profileIcon {
+  width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--surface-hover); color: var(--text); flex-shrink: 0;
+}
+.profileIdentity strong, .profileIdentity span { display: block; }
+.profileIdentity strong { text-transform: capitalize; font-size: 13px; }
+.profileIdentity span { margin-top: 3px; color: var(--text-muted); font-size: 11px; }
+.profileVisibility { margin-top: 20px; }
+.profileSectionLabel { margin-bottom: 8px; color: var(--text-soft); font-size: 13px; font-weight: 700; }
+.visibilityOption {
+  width: 100%; display: flex; align-items: flex-start; gap: 11px; padding: 12px; margin-top: 7px;
+  text-align: left; border: 1px solid var(--border); border-radius: 11px;
+  background: var(--surface); color: var(--text);
+}
+.visibilityOption:hover { background: var(--surface-hover); }
+.visibilityOption.active { border-color: var(--border-strong); background: var(--surface-hover); }
+.visibilityRadio {
+  width: 17px; height: 17px; margin-top: 1px; border: 2px solid var(--border-strong);
+  border-radius: 50%; flex-shrink: 0; position: relative;
+}
+.visibilityOption.active .visibilityRadio::after {
+  content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--text);
+}
+.visibilityOption strong, .visibilityOption small { display: block; }
+.visibilityOption strong { font-size: 13px; }
+.visibilityOption small { margin-top: 3px; color: var(--text-muted); font-size: 11px; line-height: 1.35; }
+
+/* Evaluaciones compactas con detalle desplegable */
+.reviewAuthor { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.reviewScore { font-size: 24px; line-height: 1; }
+.reviewScore small { margin-left: 2px; color: var(--text-muted); font-size: 10px; font-weight: 600; }
+.detailReviewButton { color: var(--text); }
+.reviewDetail { margin-top: 13px; padding-top: 13px; border-top: 1px solid var(--border); }
+.reviewMetricGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.reviewMetric {
+  display: flex; align-items: center; gap: 8px; padding: 9px;
+  border-radius: 9px; background: var(--surface-hover);
+}
+.reviewMetric > span { font-size: 16px; }
+.reviewMetric small, .reviewMetric b { display: block; }
+.reviewMetric small { color: var(--text-muted); font-size: 9px; line-height: 1.2; }
+.reviewMetric b { margin-top: 2px; font-size: 14px; }
+.reviewComment { margin-top: 10px; padding: 11px; border-radius: 10px; background: var(--surface-soft); }
+.reviewComment small { color: var(--text-muted); font-size: 10px; font-weight: 700; }
+.reviewComment p { margin: 5px 0 0; color: var(--text-soft); line-height: 1.5; }
+.reviewExpanded { background: var(--surface-soft); }
+
+@media (max-width: 760px) {
+  .profileButton span { display: none; }
+  .profileButton { width: 40px; padding: 0; }
+}
+
+@media (max-width: 560px) {
+  .reviewMetricGrid { grid-template-columns: repeat(2, 1fr); }
+}
