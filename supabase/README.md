@@ -1,13 +1,18 @@
 # Supabase
 
-## Primera instalación
+Ejecutá las migraciones en este orden dentro del proyecto Supabase:
 
-1. Crear un proyecto en Supabase.
-2. Abrir **SQL Editor**.
-3. Ejecutar `migrations/001_initial_schema.sql`.
-4. No ejecutar ningún seed: la base queda vacía.
-5. Crear el primer usuario desde la app.
-6. Convertir ese usuario en `admin` desde SQL Editor:
+1. `001_initial_schema.sql`
+2. `003_rating_permissions.sql`
+3. `004_restaurant_approval.sql`
+
+La aplicación no incluye datos iniciales: las hamburgueserías se cargan desde la propia app.
+
+## Roles
+
+Los roles posibles son `user`, `editor` y `admin`.
+
+Para convertir un usuario en admin:
 
 ```sql
 update public.profiles
@@ -15,14 +20,18 @@ set role = 'admin'
 where id = 'UUID_DEL_USUARIO';
 ```
 
-Podés obtener el UUID desde **Authentication -> Users**.
+Para convertirlo en editor:
 
-## Roles
+```sql
+update public.profiles
+set role = 'editor'
+where id = 'UUID_DEL_USUARIO';
+```
 
-- `user`: puede ver y cargar/editar sus propias evaluaciones.
-- `editor`: además puede crear y editar hamburgueserías y subir imágenes.
-- `admin`: además puede borrar restaurantes/evaluaciones y administrar roles mediante SQL.
+## Aprobación
 
-## Importante
+- `user`: puede evaluar hamburgueserías.
+- `editor`: puede solicitar creación o cambios de hamburgueserías.
+- `admin`: puede aprobar/rechazar solicitudes y crear/editar/eliminar directamente.
 
-El rol se cambia desde Supabase, no desde el frontend. Así un usuario no puede elevarse a admin manipulando la aplicación.
+Los editores no tienen `INSERT`/`UPDATE` directo sobre `restaurants`; sus cambios pasan por `restaurant_requests`.
