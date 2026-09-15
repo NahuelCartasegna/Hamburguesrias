@@ -2,15 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
   ExternalLink,
+  LayoutGrid,
+  List,
   MapPin,
   MessageSquare,
   Moon,
+  Pencil,
   Plus,
   Search,
-  Save,
   Star,
   Sun,
-  Trash2
+  Trash2,
+  X
 } from 'lucide-react'
 
 import { supabase } from './lib/supabase'
@@ -38,6 +41,10 @@ export default function App() {
     return localStorage.getItem('hamburguesitas-theme') === 'dark'
   })
 
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem('hamburguesitas-view') || 'grid'
+  })
+
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode)
 
@@ -46,6 +53,10 @@ export default function App() {
       darkMode ? 'dark' : 'light'
     )
   }, [darkMode])
+
+  useEffect(() => {
+    localStorage.setItem('hamburguesitas-view', viewMode)
+  }, [viewMode])
 
   async function loadAuth() {
     if (!supabase) return
@@ -200,7 +211,7 @@ export default function App() {
     }
 
     if (
-      !confirm(`Eliminar ${current.name}?`)
+      !confirm(`¿Eliminar ${current.name}?`)
     ) {
       return
     }
@@ -233,7 +244,7 @@ export default function App() {
     <div className="app">
       <header>
         <div className="brand">
-          <span>🍔</span>
+          <span className="brandIcon">🍔</span>
 
           <div>
             <h1>Hamburguesitas</h1>
@@ -252,11 +263,6 @@ export default function App() {
                 ? 'Cambiar a modo claro'
                 : 'Cambiar a modo oscuro'
             }
-            aria-label={
-              darkMode
-                ? 'Cambiar a modo claro'
-                : 'Cambiar a modo oscuro'
-            }
           >
             {darkMode ? (
               <Sun size={18} />
@@ -265,15 +271,17 @@ export default function App() {
             )}
           </button>
 
-          <AuthPanel
-            session={session}
-            profile={profile}
-            onAuthChange={loadAuth}
-          />
+          <div className="authWrapper">
+            <AuthPanel
+              session={session}
+              profile={profile}
+              onAuthChange={loadAuth}
+            />
+          </div>
 
           {canEdit && (
             <button
-              className="primary"
+              className="primary newButton"
               onClick={() => {
                 setEditing(null)
                 setShowForm(true)
@@ -341,8 +349,42 @@ export default function App() {
               />
             </div>
 
-            <div className="count">
-              {rows.length} lugares
+            <div className="toolbarRight">
+              <div className="count">
+                {rows.length} lugares
+              </div>
+
+              <div className="viewToggle">
+                <button
+                  className={
+                    viewMode === 'grid'
+                      ? 'active'
+                      : ''
+                  }
+                  onClick={() =>
+                    setViewMode('grid')
+                  }
+                  title="Vista en cuadrícula"
+                  aria-label="Vista en cuadrícula"
+                >
+                  <LayoutGrid size={17} />
+                </button>
+
+                <button
+                  className={
+                    viewMode === 'list'
+                      ? 'active'
+                      : ''
+                  }
+                  onClick={() =>
+                    setViewMode('list')
+                  }
+                  title="Vista en lista"
+                  aria-label="Vista en lista"
+                >
+                  <List size={18} />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -363,12 +405,19 @@ export default function App() {
               </p>
             </div>
           ) : (
-            <div className="grid">
+            <div
+              className={
+                viewMode === 'list'
+                  ? 'grid listView'
+                  : 'grid'
+              }
+            >
               {rows.map((r, i) => (
                 <Card
                   key={r.id}
                   r={r}
                   rank={i + 1}
+                  viewMode={viewMode}
                   onClick={() =>
                     setSelected(r.id)
                   }
@@ -394,10 +443,19 @@ export default function App() {
   )
 }
 
-function Card({ r, rank, onClick }) {
+function Card({
+  r,
+  rank,
+  viewMode,
+  onClick
+}) {
   return (
     <button
-      className="card"
+      className={`card ${
+        viewMode === 'list'
+          ? 'cardList'
+          : ''
+      }`}
       onClick={onClick}
     >
       {r.image_url ? (
@@ -414,9 +472,7 @@ function Card({ r, rank, onClick }) {
 
       <div className="rank">
         {rank <= 3
-          ? ['🥇', '🥈', '🥉'][
-              rank - 1
-            ]
+          ? ['🥇', '🥈', '🥉'][rank - 1]
           : `#${rank}`}
       </div>
 
@@ -432,7 +488,7 @@ function Card({ r, rank, onClick }) {
 
         <div className="chips">
           {CATS.map(
-            ([k, icon, label]) => (
+            ([k, icon]) => (
               <span key={k}>
                 {icon}{' '}
                 {avg(
@@ -457,6 +513,21 @@ function Card({ r, rank, onClick }) {
   )
 }
 
+function formatDate(date) {
+  if (!date) return ''
+
+  return new Intl.DateTimeFormat(
+    'es-AR',
+    {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }
+  ).format(new Date(date))
+}
+
 function Detail({
   r,
   session,
@@ -470,6 +541,9 @@ function Detail({
 }) {
   const [showRating, setShowRating] =
     useState(false)
+
+  const [editingRating, setEditingRating] =
+    useState(null)
 
   const [form, setForm] = useState({
     burger: '',
@@ -487,12 +561,57 @@ function Detail({
   const [error, setError] =
     useState('')
 
-  async function addRating(e) {
+  function openNewRating() {
+    setEditingRating(null)
+
+    setForm({
+      burger: '',
+      fries: '',
+      price_quality: '',
+      time: '',
+      venue: '',
+      packaging: '',
+      notes: ''
+    })
+
+    setError('')
+    setShowRating(true)
+  }
+
+  function openEditRating(rating) {
+    setEditingRating(rating)
+
+    setForm({
+      burger: rating.burger ?? '',
+      fries: rating.fries ?? '',
+      price_quality:
+        rating.price_quality ?? '',
+      time: rating.time ?? '',
+      venue: rating.venue ?? '',
+      packaging: rating.packaging ?? '',
+      notes: rating.notes ?? ''
+    })
+
+    setError('')
+    setShowRating(true)
+  }
+
+  async function saveRating(e) {
     e.preventDefault()
 
     if (!session) return
 
+    const comment = form.notes.trim()
+
+    if (!comment) {
+      setError(
+        'El comentario es obligatorio.'
+      )
+      return
+    }
+
     setSaving(true)
+    setError('')
 
     const values =
       Object.fromEntries(
@@ -504,35 +623,90 @@ function Detail({
         ])
       )
 
-    const { error } =
-      await supabase
+    let result
+
+    if (editingRating) {
+      result = await supabase
+        .from('ratings')
+        .update({
+          ...values,
+          notes: comment
+        })
+        .eq('id', editingRating.id)
+    } else {
+      result = await supabase
         .from('ratings')
         .insert({
           restaurant_id: r.id,
           user_id: session.user.id,
           ...values,
-          notes: form.notes || null
+          notes: comment
         })
+    }
+
+    if (result.error) {
+      setError(result.error.message)
+      setSaving(false)
+      return
+    }
+
+    setShowRating(false)
+    setEditingRating(null)
+
+    setForm({
+      burger: '',
+      fries: '',
+      price_quality: '',
+      time: '',
+      venue: '',
+      packaging: '',
+      notes: ''
+    })
+
+    await onReload()
+
+    setSaving(false)
+  }
+
+  async function deleteRating(rating) {
+    if (!profile) return
+
+    const isAdmin =
+      profile.role === 'admin'
+
+    const isOwner =
+      rating.user_id ===
+      session?.user?.id
+
+    if (!isAdmin && !isOwner) {
+      return
+    }
+
+    const username =
+      profiles[rating.user_id]
+        ?.display_name ||
+      'este usuario'
+
+    if (
+      !confirm(
+        `¿Eliminar la evaluación de ${username}?`
+      )
+    ) {
+      return
+    }
+
+    const { error } =
+      await supabase
+        .from('ratings')
+        .delete()
+        .eq('id', rating.id)
 
     if (error) {
       setError(error.message)
-    } else {
-      setShowRating(false)
-
-      setForm({
-        burger: '',
-        fries: '',
-        price_quality: '',
-        time: '',
-        venue: '',
-        packaging: '',
-        notes: ''
-      })
-
-      await onReload()
+      return
     }
 
-    setSaving(false)
+    await onReload()
   }
 
   return (
@@ -546,7 +720,7 @@ function Detail({
       </button>
 
       <div className="detailTop">
-        <div>
+        <div className="detailInfo">
           {r.image_url ? (
             <img
               className="detailImage"
@@ -566,7 +740,9 @@ function Detail({
 
             <h2>{r.name}</h2>
 
-            <p>{r.description}</p>
+            {r.description && (
+              <p>{r.description}</p>
+            )}
 
             <div className="links">
               {r.website_url && (
@@ -652,9 +828,7 @@ function Detail({
         {session && (
           <button
             className="primary"
-            onClick={() =>
-              setShowRating(true)
-            }
+            onClick={openNewRating}
           >
             <Star size={17} />
             Evaluar
@@ -663,22 +837,22 @@ function Detail({
 
         {canEdit && (
           <button
-            className="ghost"
+            className="editAction"
             onClick={onEdit}
           >
-            <Save size={17} />
-            Editar
+            <Pencil size={16} />
+            Editar hamburguesería
           </button>
         )}
 
         {profile?.role ===
           'admin' && (
           <button
-            className="danger"
+            className="deleteAction"
             onClick={onDelete}
           >
-            <Trash2 size={17} />
-            Eliminar
+            <Trash2 size={16} />
+            Eliminar hamburguesería
           </button>
         )}
       </div>
@@ -704,6 +878,12 @@ function Detail({
           {r.ratings.length})
         </h3>
 
+        {error && (
+          <div className="error">
+            {error}
+          </div>
+        )}
+
         {r.ratings.length ===
         0 ? (
           <div className="muted">
@@ -711,33 +891,93 @@ function Detail({
             evaluaciones.
           </div>
         ) : (
-          r.ratings.map(x => (
-            <div
-              className="review"
-              key={x.id}
-            >
-              <div>
-                <b>
-                  {profiles[
-                    x.user_id
-                  ]?.display_name ||
-                    'Usuario'}
-                </b>
+          r.ratings.map(x => {
+            const isOwner =
+              x.user_id ===
+              session?.user?.id
 
-                <span>
-                  {ratingScore(
-                    x
-                  )?.toFixed(2) ??
-                    'Sin puntaje'}
-                  /10
-                </span>
+            const isAdmin =
+              profile?.role ===
+              'admin'
+
+            return (
+              <div
+                className="review"
+                key={x.id}
+              >
+                <div className="reviewHeader">
+                  <div className="reviewAuthor">
+                    <b>
+                      {profiles[
+                        x.user_id
+                      ]?.display_name ||
+                        'Usuario'}
+                    </b>
+
+                    <span>
+                      {ratingScore(
+                        x
+                      )?.toFixed(2) ??
+                        'Sin puntaje'}
+                      /10
+                    </span>
+                  </div>
+
+                  <div className="reviewActions">
+                    {isOwner && (
+                      <button
+                        className="reviewButton editReviewButton"
+                        onClick={() =>
+                          openEditRating(
+                            x
+                          )
+                        }
+                        title="Editar evaluación"
+                      >
+                        <Pencil
+                          size={14}
+                        />
+                        Editar
+                      </button>
+                    )}
+
+                    {isAdmin && (
+                      <button
+                        className="reviewButton deleteReviewButton"
+                        onClick={() =>
+                          deleteRating(
+                            x
+                          )
+                        }
+                        title="Eliminar evaluación"
+                      >
+                        <Trash2
+                          size={14}
+                        />
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {x.notes && (
+                  <p>{x.notes}</p>
+                )}
+
+                <small className="reviewDate">
+                  {x.updated_at &&
+                  x.updated_at !==
+                    x.created_at
+                    ? `Actualizada: ${formatDate(
+                        x.updated_at
+                      )}`
+                    : `Creada: ${formatDate(
+                        x.created_at
+                      )}`}
+                </small>
               </div>
-
-              {x.notes && (
-                <p>{x.notes}</p>
-              )}
-            </div>
-          ))
+            )
+          })
         )}
       </section>
 
@@ -745,14 +985,14 @@ function Detail({
         <div className="modalBg">
           <form
             className="modal"
-            onSubmit={
-              addRating
-            }
+            onSubmit={saveRating}
           >
             <div className="modalHead">
               <div>
                 <span className="eyebrow">
-                  EVALUACIÓN
+                  {editingRating
+                    ? 'EDITAR EVALUACIÓN'
+                    : 'EVALUACIÓN'}
                 </span>
 
                 <h2>{r.name}</h2>
@@ -760,14 +1000,15 @@ function Detail({
 
               <button
                 type="button"
-                className="ghost"
+                className="modalClose"
                 onClick={() =>
                   setShowRating(
                     false
                   )
                 }
+                title="Cerrar"
               >
-                ×
+                <X size={18} />
               </button>
             </div>
 
@@ -803,9 +1044,10 @@ function Detail({
             </div>
 
             <label>
-              Comentario
+              Comentario *
 
               <textarea
+                required
                 value={form.notes}
                 onChange={e =>
                   setForm({
@@ -814,7 +1056,13 @@ function Detail({
                       e.target.value
                   })
                 }
+                placeholder="Contanos qué te pareció..."
               />
+
+              <small className="fieldHint">
+                El comentario es
+                obligatorio.
+              </small>
             </label>
 
             {error && (
@@ -829,7 +1077,9 @@ function Detail({
             >
               {saving
                 ? 'Guardando...'
-                : 'Guardar evaluación'}
+                : editingRating
+                  ? 'Guardar cambios'
+                  : 'Guardar evaluación'}
             </button>
           </form>
         </div>
