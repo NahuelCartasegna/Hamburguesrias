@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { LogIn, LogOut } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { supabase } from 'lib/supabase'
 
 export default function AuthPanel({ session, profile, onAuthChange }) {
   const [open, setOpen] = useState(false)
