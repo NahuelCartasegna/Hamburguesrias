@@ -1,5 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, ExternalLink, ImagePlus, MapPin, MessageSquare, Plus, Search, Save, Star, Trash2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  ExternalLink,
+  MapPin,
+  MessageSquare,
+  Moon,
+  Plus,
+  Search,
+  Save,
+  Star,
+  Sun,
+  Trash2
+} from 'lucide-react'
+
 import { supabase } from './lib/supabase'
 import { CATS, avg, ratingScore, restaurantScore } from './lib/scoring'
 import AuthPanel from './components/AuthPanel'
@@ -20,6 +33,19 @@ export default function App() {
 
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
+
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('hamburguesitas-theme') === 'dark'
+  })
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode)
+
+    localStorage.setItem(
+      'hamburguesitas-theme',
+      darkMode ? 'dark' : 'light'
+    )
+  }, [darkMode])
 
   async function loadAuth() {
     if (!supabase) return
@@ -100,7 +126,9 @@ export default function App() {
 
     const {
       data: { subscription }
-    } = supabase.auth.onAuthStateChange(() => loadAuth())
+    } = supabase.auth.onAuthStateChange(() => {
+      loadAuth()
+    })
 
     return () => subscription.unsubscribe()
   }, [])
@@ -109,7 +137,9 @@ export default function App() {
     () =>
       restaurants
         .map(r => {
-          const rs = ratings.filter(x => x.restaurant_id === r.id)
+          const rs = ratings.filter(
+            x => x.restaurant_id === r.id
+          )
 
           return {
             ...r,
@@ -118,37 +148,62 @@ export default function App() {
           }
         })
         .filter(r =>
-          r.name.toLowerCase().includes(search.toLowerCase())
+          r.name
+            .toLowerCase()
+            .includes(search.toLowerCase())
         )
-        .sort((a, b) => (b.score ?? -1) - (a.score ?? -1)),
+        .sort(
+          (a, b) =>
+            (b.score ?? -1) -
+            (a.score ?? -1)
+        ),
     [restaurants, ratings, search]
   )
 
-  const current = restaurants.find(r => r.id === selected)
+  const current = restaurants.find(
+    r => r.id === selected
+  )
 
   const currentData = current
     ? {
         ...current,
-        ratings: ratings.filter(x => x.restaurant_id === current.id),
+        ratings: ratings.filter(
+          x => x.restaurant_id === current.id
+        ),
         score: restaurantScore(
-          ratings.filter(x => x.restaurant_id === current.id)
+          ratings.filter(
+            x => x.restaurant_id === current.id
+          )
         )
       }
     : null
 
-  const canEdit = ['editor', 'admin'].includes(profile?.role)
+  const canEdit = ['editor', 'admin'].includes(
+    profile?.role
+  )
 
   async function afterSaved(id) {
     setShowForm(false)
     setEditing(null)
+
     await load()
+
     setSelected(id)
   }
 
   async function deleteRestaurant() {
-    if (!current || profile?.role !== 'admin') return
+    if (
+      !current ||
+      profile?.role !== 'admin'
+    ) {
+      return
+    }
 
-    if (!confirm(`Eliminar ${current.name}?`)) return
+    if (
+      !confirm(`Eliminar ${current.name}?`)
+    ) {
+      return
+    }
 
     const { error } = await supabase
       .from('restaurants')
@@ -167,7 +222,8 @@ export default function App() {
     return (
       <div className="app">
         <div className="error">
-          Configurá VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.
+          Configurá VITE_SUPABASE_URL y
+          VITE_SUPABASE_ANON_KEY.
         </div>
       </div>
     )
@@ -186,6 +242,29 @@ export default function App() {
         </div>
 
         <div className="headerActions">
+          <button
+            className="themeToggle"
+            onClick={() =>
+              setDarkMode(current => !current)
+            }
+            title={
+              darkMode
+                ? 'Cambiar a modo claro'
+                : 'Cambiar a modo oscuro'
+            }
+            aria-label={
+              darkMode
+                ? 'Cambiar a modo claro'
+                : 'Cambiar a modo oscuro'
+            }
+          >
+            {darkMode ? (
+              <Sun size={18} />
+            ) : (
+              <Moon size={18} />
+            )}
+          </button>
+
           <AuthPanel
             session={session}
             profile={profile}
@@ -207,7 +286,11 @@ export default function App() {
         </div>
       </header>
 
-      {error && <div className="error">{error}</div>}
+      {error && (
+        <div className="error">
+          {error}
+        </div>
+      )}
 
       {currentData ? (
         <Detail
@@ -228,16 +311,21 @@ export default function App() {
         <>
           <section className="hero">
             <div>
-              <span className="eyebrow">RANKING</span>
+              <span className="eyebrow">
+                RANKING
+              </span>
 
               <h2>¿Cuál es la mejor?</h2>
 
               <p>
-                Evaluaciones ponderadas por categoría y Calidad/Precio.
+                Evaluaciones ponderadas por
+                categoría y Calidad/Precio.
               </p>
             </div>
 
-            <div className="heroIcon">🍔</div>
+            <div className="heroIcon">
+              🍔
+            </div>
           </section>
 
           <div className="toolbar">
@@ -246,7 +334,9 @@ export default function App() {
 
               <input
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={e =>
+                  setSearch(e.target.value)
+                }
                 placeholder="Buscar hamburguesería..."
               />
             </div>
@@ -262,7 +352,9 @@ export default function App() {
             </div>
           ) : rows.length === 0 ? (
             <div className="empty">
-              <h3>Todavía no hay hamburgueserías</h3>
+              <h3>
+                Todavía no hay hamburgueserías
+              </h3>
 
               <p>
                 {canEdit
@@ -277,7 +369,9 @@ export default function App() {
                   key={r.id}
                   r={r}
                   rank={i + 1}
-                  onClick={() => setSelected(r.id)}
+                  onClick={() =>
+                    setSelected(r.id)
+                  }
                 />
               ))}
             </div>
@@ -320,7 +414,9 @@ function Card({ r, rank, onClick }) {
 
       <div className="rank">
         {rank <= 3
-          ? ['🥇', '🥈', '🥉'][rank - 1]
+          ? ['🥇', '🥈', '🥉'][
+              rank - 1
+            ]
           : `#${rank}`}
       </div>
 
@@ -329,21 +425,32 @@ function Card({ r, rank, onClick }) {
 
         <div className="meta">
           {r.ratings.length} evaluación
-          {r.ratings.length === 1 ? '' : 'es'}
+          {r.ratings.length === 1
+            ? ''
+            : 'es'}
         </div>
 
         <div className="chips">
-          {CATS.map(([k, icon, label]) => (
-            <span key={k}>
-              {icon}{' '}
-              {avg(r.ratings.map(x => x[k]))?.toFixed(1) ?? '—'}
-            </span>
-          ))}
+          {CATS.map(
+            ([k, icon, label]) => (
+              <span key={k}>
+                {icon}{' '}
+                {avg(
+                  r.ratings.map(
+                    x => x[k]
+                  )
+                )?.toFixed(1) ?? '—'}
+              </span>
+            )
+          )}
         </div>
       </div>
 
       <div className="bigScore">
-        {r.score == null ? '—' : r.score.toFixed(2)}
+        {r.score == null
+          ? '—'
+          : r.score.toFixed(2)}
+
         <small>/10</small>
       </div>
     </button>
@@ -361,7 +468,8 @@ function Detail({
   onDelete,
   onReload
 }) {
-  const [showRating, setShowRating] = useState(false)
+  const [showRating, setShowRating] =
+    useState(false)
 
   const [form, setForm] = useState({
     burger: '',
@@ -373,8 +481,11 @@ function Detail({
     notes: ''
   })
 
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+  const [saving, setSaving] =
+    useState(false)
+
+  const [error, setError] =
+    useState('')
 
   async function addRating(e) {
     e.preventDefault()
@@ -383,21 +494,25 @@ function Detail({
 
     setSaving(true)
 
-    const values = Object.fromEntries(
-      CATS.map(([key]) => [
-        key,
-        form[key] === '' ? null : Number(form[key])
-      ])
-    )
+    const values =
+      Object.fromEntries(
+        CATS.map(([key]) => [
+          key,
+          form[key] === ''
+            ? null
+            : Number(form[key])
+        ])
+      )
 
-    const { error } = await supabase
-      .from('ratings')
-      .insert({
-        restaurant_id: r.id,
-        user_id: session.user.id,
-        ...values,
-        notes: form.notes || null
-      })
+    const { error } =
+      await supabase
+        .from('ratings')
+        .insert({
+          restaurant_id: r.id,
+          user_id: session.user.id,
+          ...values,
+          notes: form.notes || null
+        })
 
     if (error) {
       setError(error.message)
@@ -497,39 +612,49 @@ function Detail({
       </div>
 
       <div className="metricGrid">
-        {CATS.map(([k, icon, label, w]) => {
-          const v = avg(
-            r.ratings.map(x => x[k])
-          )
+        {CATS.map(
+          ([k, icon, label, w]) => {
+            const v = avg(
+              r.ratings.map(
+                x => x[k]
+              )
+            )
 
-          return (
-            <div
-              className="metric"
-              key={k}
-            >
-              <span>{icon}</span>
+            return (
+              <div
+                className="metric"
+                key={k}
+              >
+                <span>{icon}</span>
 
-              <div>
-                <small>
-                  {label} · {Math.round(w * 100)}%
-                </small>
+                <div>
+                  <small>
+                    {label} ·{' '}
+                    {Math.round(
+                      w * 100
+                    )}
+                    %
+                  </small>
 
-                <strong>
-                  {v == null
-                    ? '—'
-                    : v.toFixed(1)}
-                </strong>
+                  <strong>
+                    {v == null
+                      ? '—'
+                      : v.toFixed(1)}
+                  </strong>
+                </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          }
+        )}
       </div>
 
       <div className="detailActions">
         {session && (
           <button
             className="primary"
-            onClick={() => setShowRating(true)}
+            onClick={() =>
+              setShowRating(true)
+            }
           >
             <Star size={17} />
             Evaluar
@@ -546,7 +671,8 @@ function Detail({
           </button>
         )}
 
-        {profile?.role === 'admin' && (
+        {profile?.role ===
+          'admin' && (
           <button
             className="danger"
             onClick={onDelete}
@@ -560,7 +686,9 @@ function Detail({
       {r.notes && (
         <section className="panel">
           <h3>
-            <MessageSquare size={18} />
+            <MessageSquare
+              size={18}
+            />
             Notas generales
           </h3>
 
@@ -572,12 +700,15 @@ function Detail({
 
       <section className="panel">
         <h3>
-          Evaluaciones ({r.ratings.length})
+          Evaluaciones (
+          {r.ratings.length})
         </h3>
 
-        {r.ratings.length === 0 ? (
+        {r.ratings.length ===
+        0 ? (
           <div className="muted">
-            Todavía no hay evaluaciones.
+            Todavía no hay
+            evaluaciones.
           </div>
         ) : (
           r.ratings.map(x => (
@@ -587,12 +718,16 @@ function Detail({
             >
               <div>
                 <b>
-                  {profiles[x.user_id]?.display_name ||
+                  {profiles[
+                    x.user_id
+                  ]?.display_name ||
                     'Usuario'}
                 </b>
 
                 <span>
-                  {ratingScore(x)?.toFixed(2) ??
+                  {ratingScore(
+                    x
+                  )?.toFixed(2) ??
                     'Sin puntaje'}
                   /10
                 </span>
@@ -610,7 +745,9 @@ function Detail({
         <div className="modalBg">
           <form
             className="modal"
-            onSubmit={addRating}
+            onSubmit={
+              addRating
+            }
           >
             <div className="modalHead">
               <div>
@@ -624,35 +761,45 @@ function Detail({
               <button
                 type="button"
                 className="ghost"
-                onClick={() => setShowRating(false)}
+                onClick={() =>
+                  setShowRating(
+                    false
+                  )
+                }
               >
                 ×
               </button>
             </div>
 
             <div className="scoreGrid">
-              {CATS.map(([k, icon, label]) => (
-                <label key={k}>
-                  <span>
-                    {icon} {label}
-                  </span>
+              {CATS.map(
+                ([k, icon, label]) => (
+                  <label key={k}>
+                    <span>
+                      {icon} {label}
+                    </span>
 
-                  <input
-                    required
-                    type="number"
-                    min="0"
-                    max="10"
-                    step=".1"
-                    value={form[k]}
-                    onChange={e =>
-                      setForm({
-                        ...form,
-                        [k]: e.target.value
-                      })
-                    }
-                  />
-                </label>
-              ))}
+                    <input
+                      required
+                      type="number"
+                      min="0"
+                      max="10"
+                      step=".1"
+                      value={
+                        form[k]
+                      }
+                      onChange={e =>
+                        setForm({
+                          ...form,
+                          [k]:
+                            e.target
+                              .value
+                        })
+                      }
+                    />
+                  </label>
+                )
+              )}
             </div>
 
             <label>
@@ -663,7 +810,8 @@ function Detail({
                 onChange={e =>
                   setForm({
                     ...form,
-                    notes: e.target.value
+                    notes:
+                      e.target.value
                   })
                 }
               />
