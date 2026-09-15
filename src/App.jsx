@@ -414,9 +414,7 @@ function Card({ r, rank, onClick }) {
 
       <div className="rank">
         {rank <= 3
-          ? ['🥇', '🥈', '🥉'][
-              rank - 1
-            ]
+          ? ['🥇', '🥈', '🥉'][rank - 1]
           : `#${rank}`}
       </div>
 
@@ -432,7 +430,7 @@ function Card({ r, rank, onClick }) {
 
         <div className="chips">
           {CATS.map(
-            ([k, icon, label]) => (
+            ([k, icon]) => (
               <span key={k}>
                 {icon}{' '}
                 {avg(
@@ -457,6 +455,21 @@ function Card({ r, rank, onClick }) {
   )
 }
 
+function formatDate(date) {
+  if (!date) return ''
+
+  return new Intl.DateTimeFormat(
+    'es-AR',
+    {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }
+  ).format(new Date(date))
+}
+
 function Detail({
   r,
   session,
@@ -470,6 +483,9 @@ function Detail({
 }) {
   const [showRating, setShowRating] =
     useState(false)
+
+  const [editingRating, setEditingRating] =
+    useState(null)
 
   const [form, setForm] = useState({
     burger: '',
@@ -487,12 +503,57 @@ function Detail({
   const [error, setError] =
     useState('')
 
-  async function addRating(e) {
+  function openNewRating() {
+    setEditingRating(null)
+
+    setForm({
+      burger: '',
+      fries: '',
+      price_quality: '',
+      time: '',
+      venue: '',
+      packaging: '',
+      notes: ''
+    })
+
+    setError('')
+    setShowRating(true)
+  }
+
+  function openEditRating(rating) {
+    setEditingRating(rating)
+
+    setForm({
+      burger: rating.burger ?? '',
+      fries: rating.fries ?? '',
+      price_quality:
+        rating.price_quality ?? '',
+      time: rating.time ?? '',
+      venue: rating.venue ?? '',
+      packaging: rating.packaging ?? '',
+      notes: rating.notes ?? ''
+    })
+
+    setError('')
+    setShowRating(true)
+  }
+
+  async function saveRating(e) {
     e.preventDefault()
 
     if (!session) return
 
+    const comment = form.notes.trim()
+
+    if (!comment) {
+      setError(
+        'El comentario es obligatorio.'
+      )
+      return
+    }
+
     setSaving(true)
+    setError('')
 
     const values =
       Object.fromEntries(
@@ -504,35 +565,89 @@ function Detail({
         ])
       )
 
-    const { error } =
-      await supabase
+    let result
+
+    if (editingRating) {
+      result = await supabase
+        .from('ratings')
+        .update({
+          ...values,
+          notes: comment
+        })
+        .eq('id', editingRating.id)
+    } else {
+      result = await supabase
         .from('ratings')
         .insert({
           restaurant_id: r.id,
           user_id: session.user.id,
           ...values,
-          notes: form.notes || null
+          notes: comment
         })
+    }
+
+    if (result.error) {
+      setError(result.error.message)
+      setSaving(false)
+      return
+    }
+
+    setShowRating(false)
+    setEditingRating(null)
+
+    setForm({
+      burger: '',
+      fries: '',
+      price_quality: '',
+      time: '',
+      venue: '',
+      packaging: '',
+      notes: ''
+    })
+
+    await onReload()
+
+    setSaving(false)
+  }
+
+  async function deleteRating(rating) {
+    if (!profile) return
+
+    const isAdmin =
+      profile.role === 'admin'
+
+    const isOwner =
+      rating.user_id === session?.user?.id
+
+    if (!isAdmin && !isOwner) {
+      return
+    }
+
+    const username =
+      profiles[rating.user_id]
+        ?.display_name ||
+      'este usuario'
+
+    if (
+      !confirm(
+        `¿Eliminar la evaluación de ${username}?`
+      )
+    ) {
+      return
+    }
+
+    const { error } =
+      await supabase
+        .from('ratings')
+        .delete()
+        .eq('id', rating.id)
 
     if (error) {
       setError(error.message)
-    } else {
-      setShowRating(false)
-
-      setForm({
-        burger: '',
-        fries: '',
-        price_quality: '',
-        time: '',
-        venue: '',
-        packaging: '',
-        notes: ''
-      })
-
-      await onReload()
+      return
     }
 
-    setSaving(false)
+    await onReload()
   }
 
   return (
@@ -652,9 +767,7 @@ function Detail({
         {session && (
           <button
             className="primary"
-            onClick={() =>
-              setShowRating(true)
-            }
+            onClick={openNewRating}
           >
             <Star size={17} />
             Evaluar
@@ -704,6 +817,12 @@ function Detail({
           {r.ratings.length})
         </h3>
 
+        {error && (
+          <div className="error">
+            {error}
+          </div>
+        )}
+
         {r.ratings.length ===
         0 ? (
           <div className="muted">
@@ -711,33 +830,92 @@ function Detail({
             evaluaciones.
           </div>
         ) : (
-          r.ratings.map(x => (
-            <div
-              className="review"
-              key={x.id}
-            >
-              <div>
-                <b>
-                  {profiles[
-                    x.user_id
-                  ]?.display_name ||
-                    'Usuario'}
-                </b>
+          r.ratings.map(x => {
+            const isOwner =
+              x.user_id ===
+              session?.user?.id
 
-                <span>
-                  {ratingScore(
-                    x
-                  )?.toFixed(2) ??
-                    'Sin puntaje'}
-                  /10
-                </span>
+            const isAdmin =
+              profile?.role ===
+              'admin'
+
+            return (
+              <div
+                className="review"
+                key={x.id}
+              >
+                <div className="reviewHeader">
+                  <div>
+                    <b>
+                      {profiles[
+                        x.user_id
+                      ]?.display_name ||
+                        'Usuario'}
+                    </b>
+
+                    <span>
+                      {ratingScore(
+                        x
+                      )?.toFixed(2) ??
+                        'Sin puntaje'}
+                      /10
+                    </span>
+                  </div>
+
+                  <div className="reviewActions">
+                    {isOwner && (
+                      <button
+                        className="reviewButton"
+                        onClick={() =>
+                          openEditRating(
+                            x
+                          )
+                        }
+                      >
+                        <Save
+                          size={14}
+                        />
+                        Editar
+                      </button>
+                    )}
+
+                    {(isOwner ||
+                      isAdmin) && (
+                      <button
+                        className="reviewButton dangerButton"
+                        onClick={() =>
+                          deleteRating(
+                            x
+                          )
+                        }
+                      >
+                        <Trash2
+                          size={14}
+                        />
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {x.notes && (
+                  <p>{x.notes}</p>
+                )}
+
+                <small className="reviewDate">
+                  {x.updated_at &&
+                  x.updated_at !==
+                    x.created_at
+                    ? `Actualizada: ${formatDate(
+                        x.updated_at
+                      )}`
+                    : `Creada: ${formatDate(
+                        x.created_at
+                      )}`}
+                </small>
               </div>
-
-              {x.notes && (
-                <p>{x.notes}</p>
-              )}
-            </div>
-          ))
+            )
+          })
         )}
       </section>
 
@@ -745,14 +923,14 @@ function Detail({
         <div className="modalBg">
           <form
             className="modal"
-            onSubmit={
-              addRating
-            }
+            onSubmit={saveRating}
           >
             <div className="modalHead">
               <div>
                 <span className="eyebrow">
-                  EVALUACIÓN
+                  {editingRating
+                    ? 'EDITAR EVALUACIÓN'
+                    : 'EVALUACIÓN'}
                 </span>
 
                 <h2>{r.name}</h2>
@@ -803,9 +981,11 @@ function Detail({
             </div>
 
             <label>
-              Comentario
+              Comentario *
 
               <textarea
+                required
+                minLength="1"
                 value={form.notes}
                 onChange={e =>
                   setForm({
@@ -814,7 +994,13 @@ function Detail({
                       e.target.value
                   })
                 }
+                placeholder="Contanos qué te pareció..."
               />
+
+              <small className="fieldHint">
+                El comentario es
+                obligatorio.
+              </small>
             </label>
 
             {error && (
@@ -829,7 +1015,9 @@ function Detail({
             >
               {saving
                 ? 'Guardando...'
-                : 'Guardar evaluación'}
+                : editingRating
+                  ? 'Guardar cambios'
+                  : 'Guardar evaluación'}
             </button>
           </form>
         </div>
